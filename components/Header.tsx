@@ -80,7 +80,7 @@ const Header: React.FC<HeaderProps> = ({ children, className }) => {
           </button>
         </div>
 
-        {/* Login & Sign Up */}
+        {/* Login, Sign Up & Logout */}
         <div className="flex justify-between items-center gap-x-4 text-black">
           {user ? (
             <div className="flex gap-x-4 items-center">
