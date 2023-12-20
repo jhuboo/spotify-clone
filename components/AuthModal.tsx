@@ -1,6 +1,7 @@
 "use client";
 
 import Modal from "@/components/Modal";
+import useAuthModal from "@/hooks/useAuthModal";
 import {
   useSessionContext,
   useSupabaseClient,
@@ -13,13 +14,20 @@ const AuthModal = () => {
   const supabaseClient = useSupabaseClient();
   const router = useRouter();
   const { session } = useSessionContext();
+  const { onClose, isOpen } = useAuthModal();
+
+  const onChange = (open: boolean) => {
+    if (!open) {
+      onClose();
+    }
+  };
 
   return (
     <Modal
       title="Welcome back"
       description="Login to your account"
-      isOpen
-      onChange={() => {}}
+      isOpen={isOpen}
+      onChange={onChange}
     >
       <Auth
         theme="dark"
