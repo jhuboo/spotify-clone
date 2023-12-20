@@ -3,9 +3,23 @@
 import { TbPlaylist } from "react-icons/tb";
 import { AiOutlinePlusCircle } from "react-icons/ai";
 
+import useAuthModal from "@/hooks/useAuthModal";
+import useUploadModal from "@/hooks/useUploadModal";
+import { useUser } from "@/hooks/useUser";
+
 const Library = () => {
+  const authModal = useAuthModal();
+  const uploadModal = useUploadModal();
+  const { user } = useUser();
+
   const onClick = () => {
-    // TODO: Handle upload later
+    if (!user) {
+      return authModal.onOpen();
+    }
+
+    // TODO: Check for subscription
+
+    return uploadModal.onOpen();
   };
 
   return (
@@ -24,9 +38,7 @@ const Library = () => {
           onClick={onClick}
         />
       </div>
-      <div className="flex flex-col gap-y-2 mt-4 px-3">
-       List of Songs!    
-      </div>
+      <div className="flex flex-col gap-y-2 mt-4 px-3">List of Songs!</div>
     </div>
   );
 };
