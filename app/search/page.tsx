@@ -13,6 +13,9 @@ interface SearchProps {
 const Search = async ({ searchParams }: SearchProps) => {
   const songs = await getSongsByTitle(searchParams.title);
 
+  // Set a timeout to simulate a slow network
+  await new Promise((resolve) => setTimeout(resolve, 2000));
+
   return (
     <div className="bg-neutral-900 rounded-lg h-full w-full overflow-hidden overflow-y-auto">
       <Header className="from-bg-neutral-900">
