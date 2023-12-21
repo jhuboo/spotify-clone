@@ -39,6 +39,21 @@ const PlayerContent: React.FC<PlayerContentProps> = ({ song, songUrl }) => {
     player.setId(nextSong);
   };
 
+  const onPlayPrev = () => {
+    if (player.ids.length === 0) {
+      return;
+    }
+
+    const currentIndex = player.ids.findIndex((id) => id === player.activeId);
+    const prevSong = player.ids[currentIndex - 1];
+
+    if (!prevSong) {
+      return player.setId(player.ids[player.ids.length - 1]);
+    }
+
+    player.setId(prevSong);
+  };
+
   const handlePlay = () => {
     console.log("play");
   };
