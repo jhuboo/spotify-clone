@@ -1,11 +1,25 @@
 "use client";
 
 import usePlayer from "@/hooks/usePlayer";
+import useGetSongById from "@/hooks/useGetSongById";
+import useLoadSongUrl from "@/hooks/useLoadSongUrl";
 
 const Player = () => {
-  const Player = usePlayer();
+  const player = usePlayer();
+  const { song } = useGetSongById(player.activeId);
 
-  return <div>Player</div>;
+  // Add song! so that it doesn't complain about undefined
+  const songUrl = useLoadSongUrl(song!);
+
+  if (!song || !songUrl || !player.activeId) {
+    return null;
+  }
+
+  return (
+    <div className="fixed bottom-0 bg-black w-full py-2 h-[80px] px-4">
+      Player
+    </div>
+  );
 };
 
 export default Player;
