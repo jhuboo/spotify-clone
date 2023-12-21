@@ -4,12 +4,13 @@ import { Song } from "@/types";
 import MediaItem from "@/components/MediaItem";
 import LikeButton from "@/components/LikeButton";
 import Slider from "@/components/Slider";
+import usePlayer from "@/hooks/usePlayer";
 
+import { useEffect, useState } from "react";
 import { BsPlayFill, BsPauseFill } from "react-icons/bs";
 import { AiFillStepBackward, AiFillStepForward } from "react-icons/ai";
 import { HiSpeakerWave, HiSpeakerXMark } from "react-icons/hi2";
-import usePlayer from "@/hooks/usePlayer";
-import { useEffect, useState } from "react";
+import useSound from "use-sound";
 
 interface PlayerContentProps {
   song: Song;
@@ -24,6 +25,7 @@ const PlayerContent: React.FC<PlayerContentProps> = ({ song, songUrl }) => {
   const Icon = isPlaying ? BsPauseFill : BsPlayFill;
   const VolumeIcon = volume === 0 ? HiSpeakerXMark : HiSpeakerWave;
 
+  // TODO: Add shuffle and repeat
   const onPlayNext = () => {
     if (player.ids.length === 0) {
       return;
@@ -54,8 +56,39 @@ const PlayerContent: React.FC<PlayerContentProps> = ({ song, songUrl }) => {
     player.setId(prevSong);
   };
 
+  const [play, { pause, sound }] = useSound(songUrl, {
+    volume: volume,
+    onplay: () => setIsPlaying(true),
+    onend: () => {
+      setIsPlaying(false);
+      onPlayNext();
+    },
+    onpause: () => setIsPlaying(false),
+    format: ["mp3"],
+  });
+
+  useEffect(() => {
+    sound?.play();
+
+    return () => {
+      sound?.unload();
+    };
+  }, [sound]);
+
   const handlePlay = () => {
-    console.log("play");
+    if (!isPlaying) {
+      play();
+    } else {
+      pause();
+    }
+  };
+
+  const handleMute = () => {
+    if (volume === 0) {
+      setVolume(1);
+    } else {
+      setVolume(0);
+    }
   };
 
   return (
@@ -108,10 +141,13 @@ const PlayerContent: React.FC<PlayerContentProps> = ({ song, songUrl }) => {
         <div className="flex items-center gap-x-2 w-[120px]">
           <VolumeIcon
             size={30}
-            onClick={() => {}}
+            onClick={handleMute}
             className="cursor-pointer"
           />
-          <Slider />
+          <Slider
+            value={volume}
+            onChange={(value) => setVolume(value)}
+          />
         </div>
       </div>
     </div>
