@@ -91,3 +91,98 @@ const createOrRetrieveCustomer = async ({
   // if there is no error and there is a stripe_customer_id, return it
   return data.stripe_customer_id;
 };
+
+const copyBillingDetailsToCustomer = async (
+  uuid: string,
+  payment_method: Stripe.PaymentMethod
+) => {
+  const customer = payment_method.customer as string;
+  const { name, phone, address } = payment_method.billing_details;
+  if (!name || !phone || !address) return;
+
+  // @ts-ignore
+  await stripe.customers.update(customer, { name, phone, address });
+
+  const { error } = await supabaseAdmin
+    .from("users")
+    .update({
+      billing_address: { ...address },
+      payment_method: { ...payment_method[payment_method.type] },
+    })
+    .eq("id", uuid);
+  if (error) throw error;
+};
+
+const manageSubscriptionStatusChange = async (
+  subscriptionId: string,
+  customerId: string,
+  createAction = false
+) => {
+  // Get the customer's supabase UUID
+  const { data: customerData, error: noCustomerError } = await supabaseAdmin
+    .from("customers")
+    .select("id")
+    .eq("stripe_customer_id", customerId)
+    .single();
+  if (noCustomerError) throw noCustomerError;
+
+  const { id: uuid } = customerData!;
+
+  const subscription = await stripe.subscriptions.retrieve(subscriptionId, {
+    expand: ["default_payment_method"],
+  });
+
+  // upsert the latest status of the subscription object to supabase
+  const subscriptionData: Database["public"]["Tables"]["subscriptions"]["Insert"] =
+    {
+      id: subscription.id,
+      user_id: uuid,
+      metadata: subscription.metadata,
+      // @ts-ignore
+      status: subscription.status,
+      price_id: subscription.items.data[0].price.id,
+      // TODO: check quantity on subscription.items.data[0].quantity
+      // @ts-ignore
+      quantity: subscription.quantity,
+      cancel_at_period_end: subscription.cancel_at_period_end,
+      canceled_at: subscription.canceled_at
+        ? toDateTime(subscription.canceled_at).toISOString()
+        : null,
+      current_period_start: toDateTime(
+        subscription.current_period_start
+      ).toISOString(),
+      created: toDateTime(subscription.created).toISOString(),
+      ended_at: subscription.ended_at
+        ? toDateTime(subscription.ended_at).toISOString()
+        : null,
+      trial_start: subscription.trial_start
+        ? toDateTime(subscription.trial_start).toISOString()
+        : null,
+      trial_end: subscription.trial_end
+        ? toDateTime(subscription.trial_end).toISOString()
+        : null,
+    };
+
+  const { error } = await supabaseAdmin
+    .from("subscriptions")
+    .upsert([subscriptionData]);
+  if (error) throw error;
+  console.log(`upserted subscription: ${subscription.id} for user: ${uuid}`);
+
+  // For a new subscription, copy the billing details to the customer record
+  // NOTE: This is a costly operation and should only happend at the very end
+  if (createAction && subscription.default_payment_method && uuid) {
+    await copyBillingDetailsToCustomer(
+      uuid,
+      subscription.default_payment_method as Stripe.PaymentMethod
+    );
+  }
+};
+
+// Exports
+export {
+  upsertProductRecord,
+  upsertPriceRecord,
+  createOrRetrieveCustomer,
+  manageSubscriptionStatusChange,
+};
