@@ -11,7 +11,7 @@ const useLoadSong = (song: Song) => {
   }
 
   const { data: songData } = supabaseClient.storage
-    .from("song")
+    .from("songs")
     .getPublicUrl(song.song_path);
 
   return songData.publicUrl;
