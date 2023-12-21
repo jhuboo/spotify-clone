@@ -20,7 +20,6 @@ const MediaItem: React.FC<MediaItemProps> = ({ data, onClick }) => {
       onClick(data.id);
     }
 
-    // TODO: Play song
     return player.setId(data.id);
   };
 
