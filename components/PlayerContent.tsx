@@ -1,8 +1,9 @@
 "use client";
 
 import { Song } from "@/types";
-import MediaItem from "./MediaItem";
-import LikeButton from "./LikeButton";
+import MediaItem from "@/components/MediaItem";
+import LikeButton from "@/components/LikeButton";
+import Slider from "@/components/Slider";
 
 import { BsPlayFill, BsPauseFill } from "react-icons/bs";
 import { AiFillStepBackward, AiFillStepForward } from "react-icons/ai";
@@ -72,6 +73,7 @@ const PlayerContent: React.FC<PlayerContentProps> = ({ song, songUrl }) => {
             onClick={() => {}}
             className="cursor-pointer"
           />
+          <Slider />
         </div>
       </div>
     </div>
