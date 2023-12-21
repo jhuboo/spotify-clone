@@ -19,7 +19,7 @@ interface PlayerContentProps {
 
 const PlayerContent: React.FC<PlayerContentProps> = ({ song, songUrl }) => {
   const player = usePlayer();
-  const [volume, setVolume] = useState(1);
+  const [volume, setVolume] = useState(0.2); // Start at 20%
   const [isPlaying, setIsPlaying] = useState(false);
 
   const Icon = isPlaying ? BsPauseFill : BsPlayFill;
