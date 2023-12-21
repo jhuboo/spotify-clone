@@ -14,3 +14,30 @@ export const getUrl = () => {
 
   return url;
 };
+
+export const postData = async ({
+  url,
+  data,
+}: {
+  url: string;
+  data?: { price: Price };
+}) => {
+  console.log("posting, ", url, data);
+
+  const res: Response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "same-origin", // This is required for the API route to work in the browser
+    body: JSON.stringify(data ?? {}),
+  });
+
+  if (!res.ok) {
+    console.error("Error in postData: ", { url, data, res });
+
+    throw new Error(res.statusText);
+  }
+
+  return res.json();
+};
