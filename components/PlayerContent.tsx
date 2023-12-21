@@ -8,6 +8,8 @@ import Slider from "@/components/Slider";
 import { BsPlayFill, BsPauseFill } from "react-icons/bs";
 import { AiFillStepBackward, AiFillStepForward } from "react-icons/ai";
 import { HiSpeakerWave, HiSpeakerXMark } from "react-icons/hi2";
+import usePlayer from "@/hooks/usePlayer";
+import { useState } from "react";
 
 interface PlayerContentProps {
   song: Song;
@@ -15,8 +17,12 @@ interface PlayerContentProps {
 }
 
 const PlayerContent: React.FC<PlayerContentProps> = ({ song, songUrl }) => {
-  const Icon = true ? BsPauseFill : BsPlayFill;
-  const VolumeIcon = true ? HiSpeakerXMark : HiSpeakerWave;
+  const player = usePlayer();
+  const [volume, setVolume] = useState(1);
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  const Icon = isPlaying ? BsPauseFill : BsPlayFill;
+  const VolumeIcon = volume === 0 ? HiSpeakerXMark : HiSpeakerWave;
 
   const handlePlay = () => {
     console.log("play");
@@ -66,7 +72,7 @@ const PlayerContent: React.FC<PlayerContentProps> = ({ song, songUrl }) => {
         />
       </div>
 
-      <div className="hidden md:flex w-full justify-end pr-2">
+      <div className="hidden md:flex w-full justify-center pr-2">
         <div className="flex items-center gap-x-2 w-[120px]">
           <VolumeIcon
             size={30}
