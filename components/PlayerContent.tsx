@@ -9,7 +9,7 @@ import { BsPlayFill, BsPauseFill } from "react-icons/bs";
 import { AiFillStepBackward, AiFillStepForward } from "react-icons/ai";
 import { HiSpeakerWave, HiSpeakerXMark } from "react-icons/hi2";
 import usePlayer from "@/hooks/usePlayer";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface PlayerContentProps {
   song: Song;
@@ -84,6 +84,7 @@ const PlayerContent: React.FC<PlayerContentProps> = ({ song, songUrl }) => {
       {/* Desktop View */}
       <div className="hidden h-full md:flex justify-center items-center w-full max-w-[722px] gap-x-6">
         <AiFillStepBackward
+          onClick={onPlayPrev}
           size={30}
           className="text-neutral-400 cursor-pointer hover:text-white transition"
         />
@@ -97,6 +98,7 @@ const PlayerContent: React.FC<PlayerContentProps> = ({ song, songUrl }) => {
           />
         </div>
         <AiFillStepForward
+          onClick={onPlayNext}
           size={30}
           className="text-neutral-400 cursor-pointer hover:text-white transition"
         />
