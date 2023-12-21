@@ -2,7 +2,7 @@ import getSongs from "@/actions/getSongs";
 import Header from "@/components/Header";
 import ListItem from "@/components/ListItem";
 
-import PageContent from "@/app/(site)/components/PageContent";
+import PageContent from "./components/PageContent";
 
 // This is added so that the page is not cached, and is revalidated on every request
 export const revalidate = 0;
