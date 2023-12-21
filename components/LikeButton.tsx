@@ -44,6 +44,7 @@ const LikeButton: React.FC<LikeButtonProps> = ({ songId }) => {
   const Icon = isLiked ? RiHeartFill : RiHeartLine;
 
   const handleLike = async () => {
+    // if user is not logged in, open auth modal
     if (!user) {
       return authModal.onOpen();
     }
