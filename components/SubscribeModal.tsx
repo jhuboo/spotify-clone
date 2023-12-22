@@ -96,8 +96,8 @@ const SubscribeModal: React.FC<SubscribeModalProps> = ({ products }) => {
 
   return (
     <Modal
-      title="Only for premium users"
-      description="Listen to music with Spotify Premium"
+      title="Unlock the Full Experience"
+      description="Enjoy Ad-free music, unlimited skips, and high-quality audio with Spotify Premium."
       isOpen={subscribeModal.isOpen}
       onChange={onChange}
     >
