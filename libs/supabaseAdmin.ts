@@ -8,8 +8,8 @@ import { stripe } from "./stripe";
 import { toDateTime } from "./helpers";
 
 export const supabaseAdmin = createClient<Database>(
-  process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
-  process.env.SUPABASE_SERVICE_ROLE_KEY ?? ""
+  process.env.NEXT_PUBLIC_SUPABASE_URL || "",
+  process.env.SUPABASE_SERVICE_ROLE_KEY || ""
 );
 
 const upsertProductRecord = async (product: Stripe.Product) => {
@@ -18,13 +18,13 @@ const upsertProductRecord = async (product: Stripe.Product) => {
     active: product.active,
     name: product.name,
     description: product.description ?? undefined,
-    images: product.images?.[0] ?? null,
+    image: product.images?.[0] ?? null,
     metadata: product.metadata,
   };
 
   const { error } = await supabaseAdmin.from("products").upsert([productData]);
   if (error) throw error;
-  console.log(`upserted product: ${product.id}`);
+  console.log(`Product inserted/updated: ${product.id}`);
 };
 
 const upsertPriceRecord = async (price: Stripe.Price) => {
@@ -44,7 +44,7 @@ const upsertPriceRecord = async (price: Stripe.Price) => {
 
   const { error } = await supabaseAdmin.from("prices").upsert([priceData]);
   if (error) throw error;
-  console.log(`upserted price: ${price.id}`);
+  console.log(`Price inserted/updated: ${price.id}`);
 };
 
 const createOrRetrieveCustomer = async ({
@@ -54,41 +54,27 @@ const createOrRetrieveCustomer = async ({
   email: string;
   uuid: string;
 }) => {
-  // get the customer from supabase
   const { data, error } = await supabaseAdmin
     .from("customers")
     .select("stripe_customer_id")
     .eq("id", uuid)
     .single();
-
-  // if there is an error or no stripe_customer_id, create a new customer
-  if (error || !data.stripe_customer_id) {
+  if (error || !data?.stripe_customer_id) {
     const customerData: { metadata: { supabaseUUID: string }; email?: string } =
       {
-        metadata: { supabaseUUID: uuid },
+        metadata: {
+          supabaseUUID: uuid,
+        },
       };
-
-    if (email) {
-      customerData.email = email;
-    }
-
+    if (email) customerData.email = email;
     const customer = await stripe.customers.create(customerData);
-
     const { error: supabaseError } = await supabaseAdmin
       .from("customers")
-      .insert([
-        {
-          id: uuid,
-          stripe_customer_id: customer.id,
-        },
-      ]);
+      .insert([{ id: uuid, stripe_customer_id: customer.id }]);
     if (supabaseError) throw supabaseError;
-
-    console.log(`New customer created: ${uuid}`);
+    console.log(`New customer created and inserted for ${uuid}.`);
     return customer.id;
   }
-
-  // if there is no error and there is a stripe_customer_id, return it
   return data.stripe_customer_id;
 };
 
@@ -96,13 +82,12 @@ const copyBillingDetailsToCustomer = async (
   uuid: string,
   payment_method: Stripe.PaymentMethod
 ) => {
+  //Todo: check this assertion
   const customer = payment_method.customer as string;
   const { name, phone, address } = payment_method.billing_details;
   if (!name || !phone || !address) return;
-
-  // @ts-ignore
+  //@ts-ignore
   await stripe.customers.update(customer, { name, phone, address });
-
   const { error } = await supabaseAdmin
     .from("users")
     .update({
@@ -118,7 +103,7 @@ const manageSubscriptionStatusChange = async (
   customerId: string,
   createAction = false
 ) => {
-  // Get the customer's supabase UUID
+  // Get customer's UUID from mapping table.
   const { data: customerData, error: noCustomerError } = await supabaseAdmin
     .from("customers")
     .select("id")
@@ -131,8 +116,7 @@ const manageSubscriptionStatusChange = async (
   const subscription = await stripe.subscriptions.retrieve(subscriptionId, {
     expand: ["default_payment_method"],
   });
-
-  // upsert the latest status of the subscription object to supabase
+  // Upsert the latest status of the subscription object.
   const subscriptionData: Database["public"]["Tables"]["subscriptions"]["Insert"] =
     {
       id: subscription.id,
@@ -141,15 +125,21 @@ const manageSubscriptionStatusChange = async (
       // @ts-ignore
       status: subscription.status,
       price_id: subscription.items.data[0].price.id,
-      // TODO: check quantity on subscription.items.data[0].quantity
+      //TODO check quantity on subscription
       // @ts-ignore
       quantity: subscription.quantity,
       cancel_at_period_end: subscription.cancel_at_period_end,
+      cancel_at: subscription.cancel_at
+        ? toDateTime(subscription.cancel_at).toISOString()
+        : null,
       canceled_at: subscription.canceled_at
         ? toDateTime(subscription.canceled_at).toISOString()
         : null,
       current_period_start: toDateTime(
         subscription.current_period_start
+      ).toISOString(),
+      current_period_end: toDateTime(
+        subscription.current_period_end
       ).toISOString(),
       created: toDateTime(subscription.created).toISOString(),
       ended_at: subscription.ended_at
@@ -167,19 +157,20 @@ const manageSubscriptionStatusChange = async (
     .from("subscriptions")
     .upsert([subscriptionData]);
   if (error) throw error;
-  console.log(`upserted subscription: ${subscription.id} for user: ${uuid}`);
+  console.log(
+    `Inserted/updated subscription [${subscription.id}] for user [${uuid}]`
+  );
 
-  // For a new subscription, copy the billing details to the customer record
-  // NOTE: This is a costly operation and should only happend at the very end
-  if (createAction && subscription.default_payment_method && uuid) {
+  // For a new subscription copy the billing details to the customer object.
+  // NOTE: This is a costly operation and should happen at the very end.
+  if (createAction && subscription.default_payment_method && uuid)
+    //@ts-ignore
     await copyBillingDetailsToCustomer(
       uuid,
       subscription.default_payment_method as Stripe.PaymentMethod
     );
-  }
 };
 
-// Exports
 export {
   upsertProductRecord,
   upsertPriceRecord,
