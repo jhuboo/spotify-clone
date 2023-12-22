@@ -31,6 +31,8 @@ const AuthModal = () => {
     }
   };
 
+  // TODO: Implement Logic with Google and Apple
+
   return (
     <Modal
       title="Welcome back"
