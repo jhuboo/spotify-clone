@@ -15,6 +15,12 @@ const MediaItem: React.FC<MediaItemProps> = ({ data, onClick }) => {
   const imageUrl = useLoadImage(data);
   const player = usePlayer();
 
+  // Remove any part of the title within parentheses
+  // for example
+  // If the data.title has a something within parentheses () such as "Heroes Tonight (feat. Johnning)"" -
+  //  only "Heroes Tonight" should be shown.
+  const titleWithoutParentheses = data.title.replace(/\s*\(.*?\)\s*/g, "");
+
   const handleClick = () => {
     if (onClick) {
       onClick(data.id);
@@ -37,8 +43,12 @@ const MediaItem: React.FC<MediaItemProps> = ({ data, onClick }) => {
         />
       </div>
       <div className="flex flex-col gap-y-1 overflow-hidden">
-        <p className="text-white truncate">{data.title}</p>
-        <p className="text-neutral-400 text-sm truncate">By {data.author}</p>
+        <p className="text-white text truncate sm:line-clamp-1">
+          {titleWithoutParentheses}
+        </p>
+        <p className="text-neutral-400 text-sm truncate sm:line-clamp-1">
+          {data.author}
+        </p>
       </div>
     </div>
   );
