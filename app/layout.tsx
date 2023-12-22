@@ -9,6 +9,7 @@ import UserProvider from "@/providers/UserProvider";
 import ModalProvider from "@/providers/ModalProvider";
 import ToasterProvider from "@/providers/ToasterProvider";
 import getSongsByUserId from "@/actions/getSongsByUserId";
+import getActiveProductWithPrices from "@/actions/getActiveProductWithPrices";
 
 const font = Figtree({ subsets: ["latin"] });
 
@@ -24,6 +25,7 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const products = await getActiveProductWithPrices();
   const userSongs = await getSongsByUserId();
 
   return (
@@ -32,7 +34,7 @@ export default async function RootLayout({
         <ToasterProvider />
         <SupabaseProvider>
           <UserProvider>
-            <ModalProvider />
+            <ModalProvider products={products} />
             <Sidebar songs={userSongs}>{children}</Sidebar>
             <Player />
           </UserProvider>
